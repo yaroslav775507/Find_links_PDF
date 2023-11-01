@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+<head>
+    <style>
+        body {
+            background-color: #00FFFF;
+            font-family: Arial, sans-serif;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        form {
+            text-align: center;
+        }
+
+        table {
+            margin: 0 auto;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            text-align: center;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+<div class="center">
+    <div th:if="${message}">
+        <h2 th:text="${message}"></h2>
+    </div>
+    <div>
+        <form method="POST" enctype="multipart/form-data" action="/">
+            <table>
+                <tr><td>Выберите файл для загрузки:</td></tr>
+                <tr><td><input type="file" name="file" /></td></tr>
+                <tr><td><input type="submit" value="Загрузить" /></td></tr>
+            </table>
+        </form>
+    </div>
+    <div>
+        <ul>
+            <li th:each="file : ${files}">
+                <a th:href="${file}" th:text="${file}"></a>
+            </li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>
