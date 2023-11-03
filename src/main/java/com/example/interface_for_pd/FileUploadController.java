@@ -71,8 +71,8 @@ public class FileUploadController {
         StringBuilder html = new StringBuilder();
         html.append("<html>");
         html.append("<head><title>Links</title></head>");
-        html.append("<body>");
-        html.append("<h1>Links found in the PDF file:</h1>");
+        html.append("<body style=\"background-color: #F67861;\">"); // Голубой фон
+        html.append("<h1>Ссылки найденные в документе:</h1>");
         html.append("<ul>");
         for (String link : links) {
             html.append("<li><a href=\"").append(link).append("\">").append(link).append("</a></li>");
@@ -82,6 +82,7 @@ public class FileUploadController {
         html.append("</html>");
         return html.toString();
     }
+
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
                                    RedirectAttributes redirectAttributes) {
