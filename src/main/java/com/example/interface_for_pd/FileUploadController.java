@@ -35,7 +35,6 @@ public class FileUploadController {
     }
     @GetMapping("/")
     public String listUploadedFiles(Model model) {
-
         model.addAttribute("files", storageService.loadAll().map(
                         path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
                                 "serveFile", path.getFileName().toString()).build().toUri().toString())
@@ -49,28 +48,40 @@ public class FileUploadController {
         if (file == null) {
             return ResponseEntity.notFound().build();
         }
-
         try (PDDocument document = PDDocument.load(file.getInputStream())) {
             PDFTextStripper textStripper = new PDFTextStripper();
             String content = textStripper.getText(document);
-
             List<String> links = new ArrayList<>();
             Matcher matcher = Pattern.compile("https?://\\S+").matcher(content);
             while (matcher.find()) {
                 links.add(matcher.group());
             }
-
             if (links.isEmpty()) {
                 return ResponseEntity.ok().body("No links found in the PDF file");
+            } else {
+                String linksHtml = generateLinksHtml(links); // Генерация HTML для ссылок
+                return ResponseEntity.ok().body(linksHtml);
             }
-
-            String linksString = String.join("\n", links); // Обновленный разделитель
-            return ResponseEntity.ok().body(linksString);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error reading PDF file");
         }
     }
 
+    private String generateLinksHtml(List<String> links) {
+        StringBuilder html = new StringBuilder();
+        html.append("<html>");
+        html.append("<head><title>Links</title></head>");
+        html.append("<body>");
+        html.append("<h1>Links found in the PDF file:</h1>");
+        html.append("<ul>");
+        for (String link : links) {
+            html.append("<li><a href=\"").append(link).append("\">").append(link).append("</a></li>");
+        }
+        html.append("</ul>");
+        html.append("</body>");
+        html.append("</html>");
+        return html.toString();
+    }
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
                                    RedirectAttributes redirectAttributes) {
