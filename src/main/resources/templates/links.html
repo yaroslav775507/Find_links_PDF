@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Links</title>
+  <style>
+    body{
+      background-color: #F67861;
+      font-family: Arial, sans-serif;
+    }
+    .links {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      margin: 20px;
+    }
+
+    .link {
+      color: blue;
+      text-decoration: underline;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="links">
+  <h1>Ссылки в документе:</h1>
+  <div th:each="link : ${links}">
+    <a class="link" th:href="${link}" th:text="${link}"></a>
+  </div>
+</div>
+</body>
+</html>
