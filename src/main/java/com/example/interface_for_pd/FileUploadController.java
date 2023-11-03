@@ -1,8 +1,6 @@
 package com.example.interface_for_pd;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -11,6 +9,8 @@ import java.util.stream.Collectors;
 
 import com.example.interface_for_pd.st.StorageFileNotFoundException;
 import com.example.interface_for_pd.st.StorageService;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -28,14 +28,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class FileUploadController {
-
     private final StorageService storageService;
-
     @Autowired
     public FileUploadController(StorageService storageService) {
         this.storageService = storageService;
     }
-
     @GetMapping("/")
     public String listUploadedFiles(Model model) {
 
@@ -52,23 +49,26 @@ public class FileUploadController {
         if (file == null) {
             return ResponseEntity.notFound().build();
         }
-        StringBuilder content = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line);
-                content.append(System.lineSeparator());
+
+        try (PDDocument document = PDDocument.load(file.getInputStream())) {
+            PDFTextStripper textStripper = new PDFTextStripper();
+            String content = textStripper.getText(document);
+
+            List<String> links = new ArrayList<>();
+            Matcher matcher = Pattern.compile("https?://\\S+").matcher(content);
+            while (matcher.find()) {
+                links.add(matcher.group());
             }
+
+            if (links.isEmpty()) {
+                return ResponseEntity.ok().body("No links found in the PDF file");
+            }
+
+            String linksString = String.join("\n", links); // Обновленный разделитель
+            return ResponseEntity.ok().body(linksString);
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error reading file");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error reading PDF file");
         }
-        List<String> links = new ArrayList<>();
-        Matcher matcher = Pattern.compile("https?://\\S+").matcher(content.toString());
-        while (matcher.find()) {
-            links.add(matcher.group());
-        }
-        String linksString = String.join(" \n ", links);
-        return ResponseEntity.ok().body(linksString);
     }
 
     @PostMapping("/")
@@ -79,7 +79,6 @@ public class FileUploadController {
                 "Вы успешно загрузили файл " + file.getOriginalFilename() + "!");
         return "redirect:/";
     }
-
     @ExceptionHandler(StorageFileNotFoundException.class)
     public ResponseEntity<?> handleStorageFileNotFound(StorageFileNotFoundException exc) {
         return ResponseEntity.notFound().build();
